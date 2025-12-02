@@ -1,13 +1,3 @@
-// ==UserScript==
-// @name         BTE Auto-Fill
-// @namespace    http://tampermonkey.net/
-// @version      25062301
-// @description  BTE 신청 양식 자동 입력
-// @author       garan-dable
-// @match        https://docs.google.com/forms/*/1FAIpQLSeiuBIjugenzLuUlqxb5Lqneu7w_Pmw8z8bGWGp0GY2wYHWPA/*
-// @grant        GM_xmlhttpRequest
-// ==/UserScript==
-
 (function () {
   'use strict';
 
@@ -368,7 +358,7 @@
     const btn = document.createElement('button');
     btn.innerText = title;
     btn.style.zIndex = 9999;
-    btn.style.padding = '0 8px 1px 8px';
+    btn.style.padding = '1px 8px';
     btn.style.fontSize = '12px';
     btn.style.fontWeight = 'bold';
     btn.style.color = '#000';
