@@ -263,6 +263,44 @@
     return { modal, modalContent };
   }
 
+  function showNeedLoginModal() {
+    const content = document.createElement('div');
+    content.style.whiteSpace = 'pre-wrap';
+    content.style.fontSize = '14px';
+    content.style.lineHeight = '1.5';
+    const message = document.createElement('p');
+    message.textContent = '교보문고 로그인 후 도서 선택 목록이 표시됩니다.';
+    message.style.margin = '0';
+    const subMessage = document.createElement('small');
+    subMessage.textContent =
+      '(* 사내 와이파이 이용 시 접근이 차단될 수 있습니다. 외부 와이파이 또는 핫스팟을 이용해주세요.)';
+    subMessage.style.display = 'block';
+    subMessage.style.fontSize = '12px';
+    subMessage.style.color = '#888';
+    const loginLink = document.createElement('a');
+    loginLink.href = 'https://mmbr.kyobobook.co.kr/login';
+    loginLink.target = '_blank';
+    loginLink.rel = 'noopener noreferrer';
+    loginLink.textContent = '로그인하러 가기 >>';
+    loginLink.style.display = 'inline-block';
+    loginLink.style.marginTop = '8px';
+    loginLink.style.color = '#1976d2';
+    loginLink.style.textDecoration = 'underline';
+    content.appendChild(message);
+    content.appendChild(subMessage);
+    content.appendChild(loginLink);
+    createModal('⚠️ 로그인 필요', content);
+  }
+
+  function showNoOrderListModal() {
+    const content = document.createElement('div');
+    content.textContent = '최근 한 달간 도서 주문 내역이 없습니다.';
+    content.style.whiteSpace = 'pre-wrap';
+    content.style.fontSize = '14px';
+    content.style.lineHeight = '1.5';
+    createModal('⚠️ 주문 목록 없음', content);
+  }
+
   function showItemSelectModal(orders) {
     return new Promise((resolve) => {
       const content = document.createElement('div');
@@ -308,11 +346,11 @@
   async function selectKyoboOrderItem() {
     const orders = await fetchOrders();
     if (!orders) {
-      showToast('교보문고에 로그인하면 최근 한 달간의 주문 목록이 표시됩니다.');
+      showNeedLoginModal();
       return;
     }
     if (!orders.length) {
-      showToast('최근 한 달간 도서 주문 내역이 없습니다.');
+      showNoOrderListModal();
       return;
     }
     const orderIds = orders?.map((order) => order.ordrId).filter((id) => id);
