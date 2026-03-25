@@ -344,43 +344,49 @@
   }
 
   async function selectKyoboOrderItem() {
-    const orders = await fetchOrders();
-    if (!orders) {
-      showNeedLoginModal();
-      return;
+    try {
+      const orders = await fetchOrders();
+      if (!orders) {
+        showNeedLoginModal();
+        return;
+      }
+      if (!orders.length) {
+        showNoOrderListModal();
+        return;
+      }
+      const orderIds = orders?.map((order) => order.ordrId).filter((id) => id);
+      const orderItemsPromises = (orderIds || []).map((orderId) =>
+        fetchOrderItems(orderId),
+      );
+      const orderItemsResults = await Promise.all(orderItemsPromises);
+      const allOrderItems = orderItemsResults.flat().map((item, index) => {
+        const isEBook = item.saleCmdtDvsnCode === 'EBK';
+        return {
+          ...initItem,
+          itemHost: '도서',
+          itemName:
+            item.cmdtName?.replace('[eBook]', '') || `항목 ${index + 1}`,
+          itemType: isEBook ? '전자책' : '도서',
+          link: `${
+            isEBook
+              ? 'https://ebook-product.kyobobook.co.kr/dig/epd/ebook/'
+              : 'https://product.kyobobook.co.kr/detail/'
+          }${item.saleCmdtid}`,
+          paymentAmount: item.cmdtLastStlmAmnt,
+        };
+      });
+      const selectedIndex = await showItemSelectModal(allOrderItems);
+      if (selectedIndex === null) return;
+      const orderItem = allOrderItems[selectedIndex];
+      if (!orderItem) {
+        showToast('항목을 찾을 수 없습니다.');
+        return;
+      }
+      autofill(orderItem);
+    } catch (error) {
+      console.error(error);
+      showToast('잠시 후 다시 시도해주세요.');
     }
-    if (!orders.length) {
-      showNoOrderListModal();
-      return;
-    }
-    const orderIds = orders?.map((order) => order.ordrId).filter((id) => id);
-    const orderItemsPromises = (orderIds || []).map((orderId) =>
-      fetchOrderItems(orderId),
-    );
-    const orderItemsResults = await Promise.all(orderItemsPromises);
-    const allOrderItems = orderItemsResults.flat().map((item, index) => {
-      const isEBook = item.saleCmdtDvsnCode === 'EBK';
-      return {
-        ...initItem,
-        itemHost: '도서',
-        itemName: item.cmdtName?.replace('[eBook]', '') || `항목 ${index + 1}`,
-        itemType: isEBook ? '전자책' : '도서',
-        link: `${
-          isEBook
-            ? 'https://ebook-product.kyobobook.co.kr/dig/epd/ebook/'
-            : 'https://product.kyobobook.co.kr/detail/'
-        }${item.saleCmdtid}`,
-        paymentAmount: item.cmdtLastStlmAmnt,
-      };
-    });
-    const selectedIndex = await showItemSelectModal(allOrderItems);
-    if (selectedIndex === null) return;
-    const orderItem = allOrderItems[selectedIndex];
-    if (!orderItem) {
-      showToast('항목을 찾을 수 없습니다.');
-      return;
-    }
-    autofill(orderItem);
   }
 
   const createBtn = (title, onClick) => {
