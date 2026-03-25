@@ -13,64 +13,55 @@
     paymentAmount: '',
   };
 
-  const findInput = (label) => {
-    return document.querySelector(`input[aria-labelledby="${label}"]`);
-  };
-
-  const findTextarea = (label) => {
-    return document.querySelector(`textarea[aria-labelledby="${label}"]`);
-  };
-
-  const radioGroups = [...document.querySelectorAll('div[role="radiogroup"]')];
-  const findRadioGroup = (title) => {
-    for (const group of radioGroups) {
-      const el = group
-        .closest('div[role="listitem"]')
-        ?.querySelector('div[role="heading"] span');
-      if (!el?.innerText.trim().includes(title)) continue;
-      return group;
+  const findContainer = (labelText) => {
+    for (const container of document.querySelectorAll('div[jsname="WsjYwc"]')) {
+      const heading = container.querySelector('div[role="heading"]');
+      if (heading?.textContent.includes(labelText)) return container;
     }
+    return null;
   };
 
-  const getRadioValue = (group) => {
-    if (!group) return '';
-    const selectedRadio = [...group.querySelectorAll('div[role="radio"]')].find(
-      (el) => el.getAttribute('aria-checked') === 'true'
-    );
-    return selectedRadio?.getAttribute('aria-label')?.trim() || '';
-  };
+  const findInput = (labelText) =>
+    findContainer(labelText)?.querySelector('input[jsname="YPqjbf"]') ?? null;
 
-  const fillCheckbox = (el) => {
-    if (el.getAttribute('aria-checked') === 'false') {
-      el.click();
-    }
-  };
+  const findTextarea = (labelText) =>
+    findContainer(labelText)?.querySelector('textarea[jsname="YPqjbf"]') ??
+    null;
+
+  const findRadioGroup = (labelText) =>
+    findContainer(labelText)?.querySelector('div[role="radiogroup"]') ?? null;
+
+  const findEmailCheckbox = () =>
+    document.querySelector('div[role="checkbox"]') ?? null;
 
   const fillInput = (el, value) => {
-    if (el) {
-      el.value = value;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    if (!el) return;
+    el.value = value;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
   const fillRadio = (group, option) => {
     if (!group) return;
     const el = [...group.querySelectorAll('div[role="radio"]')].find((el) =>
-      el.getAttribute('aria-label')?.trim().includes(option)
+      el.getAttribute('aria-label')?.trim().includes(option),
     );
     el?.click();
   };
 
-  const EMAIL_CHECKBOX = document.getElementById('i5');
-  const USER_NAME_INPUT = findInput('i8 i11');
+  const fillCheckbox = (el) => {
+    if (el?.getAttribute('aria-checked') === 'false') el.click();
+  };
+
+  const EMAIL_CHECKBOX = findEmailCheckbox();
+  const USER_NAME_INPUT = findInput('이름 / Name');
   const TEAM_RADIO = findRadioGroup('소속 / Team');
   const ITEM_TYPE_RADIO = findRadioGroup('BTE 교육 신청 항목');
-  const ITEM_HOST_INPUT = findInput('i71 i74');
-  const ITEM_NAME_INPUT = findInput('i76 i79');
-  const LINK_TEXTAREA = findTextarea('i81 i84');
-  const PURPOSE_TEXTAREA = findTextarea('i86 i89');
+  const ITEM_HOST_INPUT = findInput('교육 기관');
+  const ITEM_NAME_INPUT = findInput('교육명/도서명');
+  const LINK_TEXTAREA = findTextarea('관련 링크');
+  const PURPOSE_TEXTAREA = findTextarea('선택하신 이유');
   const PAYMENT_TYPE_RADIO = findRadioGroup('결제 방식');
-  const PAYMENT_AMOUNT_INPUT = findInput('i105 i108');
+  const PAYMENT_AMOUNT_INPUT = findInput('결제 금액');
 
   const autofill = (item) => {
     const {
@@ -326,7 +317,7 @@
     }
     const orderIds = orders?.map((order) => order.ordrId).filter((id) => id);
     const orderItemsPromises = (orderIds || []).map((orderId) =>
-      fetchOrderItems(orderId)
+      fetchOrderItems(orderId),
     );
     const orderItemsResults = await Promise.all(orderItemsPromises);
     const allOrderItems = orderItemsResults.flat().map((item, index) => {
@@ -334,7 +325,7 @@
       return {
         ...initItem,
         itemHost: '도서',
-        itemName: item.cmdtName.replace('[eBook]', '') || `항목 ${index + 1}`,
+        itemName: item.cmdtName?.replace('[eBook]', '') || `항목 ${index + 1}`,
         itemType: isEBook ? '전자책' : '도서',
         link: `${
           isEBook
