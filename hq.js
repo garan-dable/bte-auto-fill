@@ -97,20 +97,27 @@
     autofill(newValues);
   };
 
+  const getRadioValue = (group) => {
+    if (!group) return '';
+    const checked = [...group.querySelectorAll('div[role="radio"]')].find(
+      (el) => el.getAttribute('aria-checked') === 'true',
+    );
+    return checked?.getAttribute('aria-label')?.trim() ?? '';
+  };
+
   const saveCurrentValues = () => {
     const prevValues = {
-      userName: USER_NAME_INPUT.value,
+      userName: USER_NAME_INPUT?.value ?? '',
       team: getRadioValue(TEAM_RADIO),
       itemType: getRadioValue(ITEM_TYPE_RADIO),
-      itemHost: ITEM_HOST_INPUT.value,
-      itemName: ITEM_NAME_INPUT.value,
-      link: LINK_TEXTAREA.value,
-      purpose: PURPOSE_TEXTAREA.value,
+      itemHost: ITEM_HOST_INPUT?.value ?? '',
+      itemName: ITEM_NAME_INPUT?.value ?? '',
+      link: LINK_TEXTAREA?.value ?? '',
+      purpose: PURPOSE_TEXTAREA?.value ?? '',
       paymentType: getRadioValue(PAYMENT_TYPE_RADIO),
-      paymentAmount: PAYMENT_AMOUNT_INPUT.value,
+      paymentAmount: PAYMENT_AMOUNT_INPUT?.value ?? '',
     };
     localStorage.setItem('prevValues', JSON.stringify(prevValues));
-    showToast('저장되었습니다. 다음 작성 시 현재 값이 자동으로 입력됩니다.');
   };
 
   function formatDate(date) {
@@ -420,9 +427,11 @@
   container.style.flexDirection = 'row';
   container.style.gap = '5px';
   container.style.zIndex = 9999;
-  container.appendChild(createBtn('KYOBO AUTO_FIIL 🪄', selectKyoboOrderItem));
-  container.appendChild(createBtn('💾', saveCurrentValues));
+  container.appendChild(createBtn('KYOBO AUTO FILL 🪄', selectKyoboOrderItem));
   loadPreviousValues();
+
+  const SUBMIT_BUTTON = document.querySelector('[jsname="M2UYVd"]');
+  if (SUBMIT_BUTTON) SUBMIT_BUTTON.addEventListener('click', saveCurrentValues);
 
   document.body.appendChild(container);
 })();
