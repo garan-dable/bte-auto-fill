@@ -41,11 +41,48 @@
   };
 
   const fillRadio = (group, option) => {
-    if (!group) return;
+    if (!group || !option) return;
     const el = [...group.querySelectorAll('div[role="radio"]')].find((el) =>
       el.getAttribute('aria-label')?.trim().includes(option),
     );
     el?.click();
+  };
+
+  const fillSelect = (container, value) => {
+    if (!container || !value) return;
+    const listbox = container.querySelector('div[role="listbox"]');
+    if (!listbox) return;
+    const isSelected = () =>
+      container
+        .querySelector('div[role="option"][aria-selected="true"]')
+        ?.getAttribute('data-value')
+        ?.includes(value);
+    if (isSelected()) return;
+    listbox.click();
+    let tries = 0;
+    const timer = setInterval(() => {
+      if (isSelected()) return clearInterval(timer);
+      const option = [
+        ...document.querySelectorAll('div[role="option"][data-value]'),
+      ].find(
+        (el) =>
+          el.getAttribute('data-value')?.includes(value) &&
+          el.offsetParent !== null,
+      );
+      if (option) {
+        for (const type of ['mousedown', 'mouseup', 'click'])
+          option.dispatchEvent(
+            new MouseEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              view: window,
+            }),
+          );
+      } else {
+        listbox.click();
+      }
+      if (++tries > 30) clearInterval(timer);
+    }, 100);
   };
 
   const fillCheckbox = (el) => {
@@ -55,7 +92,7 @@
   const EMAIL_CHECKBOX = findEmailCheckbox();
   const USER_NAME_INPUT = findInput('이름 / Name');
   const TEAM_RADIO = findRadioGroup('소속 / Team');
-  const ITEM_TYPE_RADIO = findRadioGroup('BTE 교육 신청 항목');
+  const ITEM_TYPE_SELECT = findContainer('BTE 교육 신청 항목');
   const ITEM_HOST_INPUT = findInput('교육 기관');
   const ITEM_NAME_INPUT = findInput('교육명/도서명');
   const LINK_TEXTAREA = findTextarea('관련 링크');
@@ -78,13 +115,13 @@
     fillCheckbox(EMAIL_CHECKBOX);
     fillInput(USER_NAME_INPUT, userName);
     fillRadio(TEAM_RADIO, team);
-    fillRadio(ITEM_TYPE_RADIO, itemType);
     fillInput(ITEM_HOST_INPUT, itemHost);
     fillInput(ITEM_NAME_INPUT, itemName);
     fillInput(LINK_TEXTAREA, link);
     fillInput(PURPOSE_TEXTAREA, purpose);
     fillRadio(PAYMENT_TYPE_RADIO, paymentType);
     fillInput(PAYMENT_AMOUNT_INPUT, paymentAmount);
+    fillSelect(ITEM_TYPE_SELECT, itemType);
     // const submitButton = document.querySelector('[jsname="M2UYVd"]');
     // if (submitButton) submitButton.click();
   };
@@ -105,11 +142,18 @@
     return checked?.getAttribute('aria-label')?.trim() ?? '';
   };
 
+  const getSelectValue = (container) => {
+    const selected = container?.querySelector(
+      'div[role="option"][aria-selected="true"]',
+    );
+    return selected?.getAttribute('data-value')?.trim() ?? '';
+  };
+
   const saveCurrentValues = () => {
     const prevValues = {
       userName: USER_NAME_INPUT?.value ?? '',
       team: getRadioValue(TEAM_RADIO),
-      itemType: getRadioValue(ITEM_TYPE_RADIO),
+      itemType: getSelectValue(ITEM_TYPE_SELECT),
       itemHost: ITEM_HOST_INPUT?.value ?? '',
       itemName: ITEM_NAME_INPUT?.value ?? '',
       link: LINK_TEXTAREA?.value ?? '',
