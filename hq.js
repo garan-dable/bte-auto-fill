@@ -52,34 +52,34 @@
     if (!container || !value) return;
     const listbox = container.querySelector('div[role="listbox"]');
     if (!listbox) return;
+    const fireClick = (el) => {
+      for (const type of ['mousedown', 'mouseup', 'click'])
+        el.dispatchEvent(
+          new MouseEvent(type, { bubbles: true, cancelable: true }),
+        );
+    };
+    const getSelected = () =>
+      container.querySelector('div[role="option"][aria-selected="true"]');
     const isSelected = () =>
-      container
-        .querySelector('div[role="option"][aria-selected="true"]')
-        ?.getAttribute('data-value')
-        ?.includes(value);
+      getSelected()?.getAttribute('data-value')?.includes(value);
+    const isOpen = () => listbox.getAttribute('aria-expanded') === 'true';
+    const open = () => fireClick(getSelected() ?? listbox);
     if (isSelected()) return;
-    listbox.click();
+    open();
     let tries = 0;
     const timer = setInterval(() => {
       if (isSelected()) return clearInterval(timer);
-      const option = [
-        ...document.querySelectorAll('div[role="option"][data-value]'),
-      ].find(
-        (el) =>
-          el.getAttribute('data-value')?.includes(value) &&
-          el.offsetParent !== null,
-      );
-      if (option) {
-        for (const type of ['mousedown', 'mouseup', 'click'])
-          option.dispatchEvent(
-            new MouseEvent(type, {
-              bubbles: true,
-              cancelable: true,
-              view: window,
-            }),
-          );
-      } else {
-        listbox.click();
+      if (isOpen()) {
+        const option = [
+          ...container.querySelectorAll('div[role="option"][data-value]'),
+        ].find(
+          (el) =>
+            el.getAttribute('data-value')?.includes(value) &&
+            el.getBoundingClientRect().height > 0,
+        );
+        if (option) fireClick(option);
+      } else if (tries % 5 === 4) {
+        open();
       }
       if (++tries > 30) clearInterval(timer);
     }, 100);
